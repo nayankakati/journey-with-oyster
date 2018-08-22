@@ -1,0 +1,195 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html id="htmlId">
+<head>
+  <title>Coverage Report :: BarrierServiceImpl</title>
+  <style type="text/css">
+    @import "../../.css/coverage.css";
+  </style>
+</head>
+
+<body>
+<div class="header"></div>
+
+<div class="content">
+<div class="breadCrumbs">
+    [ <a href="../../index.html">all classes</a> ]
+    [ <a href="../index.html">com.oyster.service.impl</a> ]
+</div>
+
+<h1>Coverage Summary for Class: BarrierServiceImpl (com.oyster.service.impl)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">BarrierServiceImpl</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/ 1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (9/ 9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (54/ 54)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<div class="sourceCode"><i>1</i>&nbsp;package com.oyster.service.impl;
+<i>2</i>&nbsp;
+<i>3</i>&nbsp;import java.util.ArrayList;
+<i>4</i>&nbsp;import java.util.List;
+<i>5</i>&nbsp;import java.util.Objects;
+<i>6</i>&nbsp;import java.util.concurrent.atomic.AtomicInteger;
+<i>7</i>&nbsp;
+<i>8</i>&nbsp;import com.oyster.domain.Barrier;
+<i>9</i>&nbsp;import com.oyster.domain.Card;
+<i>10</i>&nbsp;import com.oyster.enums.Direction;
+<i>11</i>&nbsp;import com.oyster.exception.InsufficientBalanceException;
+<i>12</i>&nbsp;import com.oyster.exception.JourneyNotValidException;
+<i>13</i>&nbsp;import com.oyster.map.repository.BarrierRepository;
+<i>14</i>&nbsp;import com.oyster.map.repository.CostRepository;
+<i>15</i>&nbsp;import com.oyster.map.repository.JourneyMapRepository;
+<i>16</i>&nbsp;import com.oyster.service.BarrierService;
+<i>17</i>&nbsp;
+<i>18</i>&nbsp;
+<i>19</i>&nbsp;/**
+<i>20</i>&nbsp; * Created by nayan.kakati on 4/19/18.
+<i>21</i>&nbsp; */
+<i>22</i>&nbsp;public class BarrierServiceImpl implements BarrierService {
+<i>23</i>&nbsp;
+<i>24</i>&nbsp;	private BarrierRepository barrierRepository;
+<i>25</i>&nbsp;	private JourneyMapRepository journeyMapRepository;
+<b class="fc"><i>26</i>&nbsp;	public BarrierServiceImpl() {</b>
+<b class="fc"><i>27</i>&nbsp;		barrierRepository = new BarrierRepository();</b>
+<b class="fc"><i>28</i>&nbsp;		journeyMapRepository = new JourneyMapRepository();</b>
+<b class="fc"><i>29</i>&nbsp;	}</b>
+<i>30</i>&nbsp;
+<i>31</i>&nbsp;	@Override
+<i>32</i>&nbsp;	public List&lt;Barrier&gt; getBarriers() {
+<b class="fc"><i>33</i>&nbsp;		return barrierRepository.getBarriers();</b>
+<i>34</i>&nbsp;	}
+<i>35</i>&nbsp;
+<i>36</i>&nbsp;	@Override
+<i>37</i>&nbsp;	public boolean isBarrierSuccessfullyPassed(Barrier barrier, Card card) throws JourneyNotValidException, InsufficientBalanceException {
+<b class="fc"><i>38</i>&nbsp;		Double totalCostForTheJourney = 0.0D;</b>
+<b class="fc"><i>39</i>&nbsp;		Barrier lastBarrierTravelled = journeyMapRepository.getLastBarrierCrossed(card.getNumber());</b>
+<b class="fc"><i>40</i>&nbsp;		checkIfItsAValidDirectionAndJourneyType(lastBarrierTravelled, barrier);</b>
+<i>41</i>&nbsp;
+<b class="fc"><i>42</i>&nbsp;		if(barrier.getJourneyType().name().equals(&quot;BUS&quot;)) {</b>
+<b class="fc"><i>43</i>&nbsp;			totalCostForTheJourney = CostRepository.BUS_COST;</b>
+<b class="fc"><i>44</i>&nbsp;			if(card.getBalance() &lt; totalCostForTheJourney) throw new InsufficientBalanceException(&quot;Card balance is low for this travel, Please recharge your card&quot;);</b>
+<b class="fc"><i>45</i>&nbsp;			card.deductFromCard(totalCostForTheJourney);</b>
+<b class="fc"><i>46</i>&nbsp;			barrier.setDirection(Direction.EXIT);</b>
+<b class="fc"><i>47</i>&nbsp;			journeyMapRepository.saveMyJourney(card.getNumber(), barrier);</b>
+<b class="fc"><i>48</i>&nbsp;			return true;</b>
+<i>49</i>&nbsp;		}
+<i>50</i>&nbsp;
+<b class="fc"><i>51</i>&nbsp;		if(barrier.getDirection().name().equals(&quot;INWARD&quot;)) {</b>
+<b class="fc"><i>52</i>&nbsp;			chargeMaximumAmountTubeStartJourney(barrier, card);</b>
+<i>53</i>&nbsp;		}
+<i>54</i>&nbsp;		else {
+<b class="fc"><i>55</i>&nbsp;			totalCostForTheJourney = calculateTotalExpenseForTheTravel(lastBarrierTravelled, barrier);</b>
+<b class="fc"><i>56</i>&nbsp;			if (totalCostForTheJourney != CostRepository.MAX_COST) {</b>
+<b class="fc"><i>57</i>&nbsp;				totalCostForTheJourney = Math.abs(-CostRepository.MAX_COST + totalCostForTheJourney);</b>
+<b class="fc"><i>58</i>&nbsp;				card.addToCard(totalCostForTheJourney);</b>
+<i>59</i>&nbsp;			}
+<i>60</i>&nbsp;		}
+<b class="fc"><i>61</i>&nbsp;		journeyMapRepository.saveMyJourney(card.getNumber(), barrier);</b>
+<b class="fc"><i>62</i>&nbsp;		return true;</b>
+<i>63</i>&nbsp;	}
+<i>64</i>&nbsp;
+<i>65</i>&nbsp;	private void checkIfItsAValidDirectionAndJourneyType(Barrier lastBarrierTravelled , Barrier barrier) throws JourneyNotValidException {
+<b class="fc"><i>66</i>&nbsp;		if(Objects.nonNull(lastBarrierTravelled) &amp;&amp; lastBarrierTravelled.getDirection().equals(barrier.getDirection())) {</b>
+<b class="fc"><i>67</i>&nbsp;			throw new JourneyNotValidException(&quot;You cannot make this journey with &quot;+barrier.getDirection().name()+&quot; direction.&quot;);</b>
+<i>68</i>&nbsp;		}
+<b class="fc"><i>69</i>&nbsp;	}</b>
+<i>70</i>&nbsp;
+<i>71</i>&nbsp;	private void chargeMaximumAmountTubeStartJourney(Barrier barrier, Card card) throws InsufficientBalanceException {
+<b class="fc"><i>72</i>&nbsp;		if(Objects.nonNull(barrier) &amp;&amp; barrier.getJourneyType().name().equals(&quot;TUBE&quot;)) {</b>
+<b class="fc"><i>73</i>&nbsp;			Double chargeMaxAmountForTube = CostRepository.MAX_COST;</b>
+<b class="fc"><i>74</i>&nbsp;			if(card.getBalance() &lt; chargeMaxAmountForTube) throw new InsufficientBalanceException(&quot;Card balance is low for this travel, Please recharge your card&quot;);</b>
+<b class="fc"><i>75</i>&nbsp;			card.deductFromCard(chargeMaxAmountForTube);</b>
+<i>76</i>&nbsp;		}
+<b class="fc"><i>77</i>&nbsp;	}</b>
+<i>78</i>&nbsp;
+<i>79</i>&nbsp;	private Double calculateTotalExpenseForTheTravel(Barrier lastBarrierTravelled, Barrier barrier) {
+<b class="fc"><i>80</i>&nbsp;		if(lastBarrierTravelled.getZones().contains(1) &amp;&amp; barrier.getZones().contains(1)) return CostRepository.ONLY_ZONE_1_COST;</b>
+<b class="fc"><i>81</i>&nbsp;		boolean isZone1Travelled = false;</b>
+<b class="fc"><i>82</i>&nbsp;		AtomicInteger totalZonesTravelled = new AtomicInteger() ;</b>
+<i>83</i>&nbsp;
+<b class="fc"><i>84</i>&nbsp;		if(lastBarrierTravelled.getZones().contains(1) || barrier.getZones().contains(1)) {</b>
+<b class="fc"><i>85</i>&nbsp;			isZone1Travelled = true;</b>
+<b class="fc"><i>86</i>&nbsp;			totalZonesTravelled.getAndIncrement();</b>
+<i>87</i>&nbsp;		}
+<i>88</i>&nbsp;
+<b class="fc"><i>89</i>&nbsp;		List&lt;Integer&gt; visitedZones = new ArrayList&lt;&gt;();</b>
+<b class="fc"><i>90</i>&nbsp;		lastBarrierTravelled.getZones().stream().forEach(zoneId -&gt; {</b>
+<b class="fc"><i>91</i>&nbsp;			if(zoneId != 1) {</b>
+<b class="fc"><i>92</i>&nbsp;				totalZonesTravelled.getAndIncrement();</b>
+<b class="fc"><i>93</i>&nbsp;				visitedZones.add(zoneId);</b>
+<i>94</i>&nbsp;			}
+<b class="fc"><i>95</i>&nbsp;		});</b>
+<i>96</i>&nbsp;
+<b class="fc"><i>97</i>&nbsp;		barrier.getZones().stream().forEach(zoneId -&gt; {</b>
+<b class="fc"><i>98</i>&nbsp;			if(zoneId != 1 &amp;&amp; !visitedZones.contains(zoneId)) totalZonesTravelled.getAndIncrement();</b>
+<b class="fc"><i>99</i>&nbsp;		});</b>
+<b class="fc"><i>100</i>&nbsp;		return calculateTotalExpenseForTheTravel(totalZonesTravelled.get(), isZone1Travelled);</b>
+<i>101</i>&nbsp;	}
+<i>102</i>&nbsp;
+<i>103</i>&nbsp;	private Double calculateTotalExpenseForTheTravel(Integer totalZonesTravelled, Boolean isZone1Travelled) {
+<b class="fc"><i>104</i>&nbsp;		if(totalZonesTravelled == 1 &amp;&amp; isZone1Travelled) return CostRepository.ONLY_ZONE_1_COST;</b>
+<b class="fc"><i>105</i>&nbsp;		if(totalZonesTravelled == 1 &amp;&amp; !isZone1Travelled) return CostRepository.ANY_1_OUTSIDE_ZONE_1;</b>
+<b class="fc"><i>106</i>&nbsp;		if(totalZonesTravelled == 2 &amp;&amp; isZone1Travelled) return CostRepository.ANY_1_OUTSIDE_ZONE_1;</b>
+<b class="fc"><i>107</i>&nbsp;		if(totalZonesTravelled == 2 &amp;&amp; !isZone1Travelled) return CostRepository.ANY_2_ZONES_EXCLUDING_ZONE_1;</b>
+<b class="fc"><i>108</i>&nbsp;		if(totalZonesTravelled == 3 &amp;&amp; isZone1Travelled) return CostRepository.ANY_2_ZONES_INCLUDING_ZONE_1;</b>
+<b class="fc"><i>109</i>&nbsp;		if(totalZonesTravelled == 3) return CostRepository.ANY_3_ZONES;</b>
+<b class="fc"><i>110</i>&nbsp;		return 0D;</b>
+<i>111</i>&nbsp;	}
+<i>112</i>&nbsp;}
+</div>
+</div>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2018-04-19 16:55</div>
+</div>
+</body>
+</html>

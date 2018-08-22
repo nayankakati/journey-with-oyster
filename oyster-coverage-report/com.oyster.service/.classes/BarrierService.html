@@ -1,0 +1,65 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html id="htmlId">
+<head>
+  <title>Coverage Report :: BarrierService</title>
+  <style type="text/css">
+    @import "../../.css/coverage.css";
+  </style>
+</head>
+
+<body>
+<div class="header"></div>
+
+<div class="content">
+<div class="breadCrumbs">
+    [ <a href="../../index.html">all classes</a> ]
+    [ <a href="../index.html">com.oyster.service</a> ]
+</div>
+
+<h1>Coverage Summary for Class: BarrierService (com.oyster.service)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+</tr>
+<tr>
+  <td class="name">BarrierService</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<div class="sourceCode"><i>1</i>&nbsp;package com.oyster.service;
+<i>2</i>&nbsp;
+<i>3</i>&nbsp;import java.util.List;
+<i>4</i>&nbsp;
+<i>5</i>&nbsp;import com.oyster.domain.Barrier;
+<i>6</i>&nbsp;import com.oyster.domain.Card;
+<i>7</i>&nbsp;import com.oyster.exception.InsufficientBalanceException;
+<i>8</i>&nbsp;import com.oyster.exception.JourneyNotValidException;
+<i>9</i>&nbsp;
+<i>10</i>&nbsp;/**
+<i>11</i>&nbsp; * Created by nayan.kakati on 4/19/18.
+<i>12</i>&nbsp; */
+<i>13</i>&nbsp;public interface BarrierService {
+<i>14</i>&nbsp;
+<i>15</i>&nbsp;	 List&lt;Barrier&gt; getBarriers();
+<i>16</i>&nbsp;
+<i>17</i>&nbsp;	 boolean isBarrierSuccessfullyPassed(Barrier barrier, Card card) throws JourneyNotValidException, InsufficientBalanceException;
+<i>18</i>&nbsp;}
+</div>
+</div>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2018-04-19 16:55</div>
+</div>
+</body>
+</html>
